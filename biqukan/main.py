@@ -12,7 +12,7 @@ def save(text, file='text.txt'):
     f.close()
 
 
-def main():
+def get_first():
     target = "http://www.biqukan.com/1_1094/5403177.html"
     req = requests.get(target)
     html = req.text
@@ -22,6 +22,20 @@ def main():
 
     print(t)
     save(t)
+
+
+def main():
+    server = "http://www.biqukan.com"
+    target = "http://www.biqukan.com/1_1094/"
+    req = requests.get(url=target)
+    html = req.text
+    div_bf = BeautifulSoup(html)
+    div = div_bf.find_all('div', class_='listmain')
+    a_bf = BeautifulSoup(str(div[0]))
+    a = a_bf.find_all('a')
+    print(div[0])
+    for each in a:
+        print(each.string, server + each.get('href'))
 
 
 if __name__ == '__main__':
