@@ -4,40 +4,48 @@
 
 import requests
 import json
-from bs4 import BeautifulSoup
+from contextlib import closing
 
 
-def save(text, file='text.txt'):
-    f = open(file, 'w')
-    f.write(text)
-    f.close()
+class get_photos(object):
 
+    def __init__(self):
+        self.server = 'https://unsplash.com/photos/xxx/download?force=trues'
+        self.target = 'https://unsplash.com/napi/feeds/home'
+        self.next_page = self.target
+        self.headers = {
+            'authorization': 'Client-ID c94869b36aa272dd62dfaeefed769d4115fb3189a9d1ec88ed457207747be626'}
+        self.ids = []
 
-def get_first():
-    target = "https://unsplash.com/napi/feeds/home"
-    headers = {
-        'authorization': 'Client-ID c94869b36aa272dd62dfaeefed769d4115fb3189a9d1ec88ed457207747be626'}
-    req = requests.get(url=target, headers=headers,  verify=False)
-    html = json.loads(req.text)
-    next_page = html['next_page']
-    print(next_page)
+    def get_ids(self):
+        req = requests.get(url=self.next_page,
+                           headers=self.headers, verify=False)
+        html = json.loads(req.text)
+        self.next_page = html['next_page']
+        for each in html['photos']:
+            self.ids.append(each['id'])
 
-    u0 = 'https://unsplash.com/photos/'
-    u2 = '/download?force=true'
-    for each in html['photos']:
-        print('id:', each['id'])
-        url = u0 + each['id'] + u2
-        res = requests.get(url)
-        name = each['id'] + '.jpg'
-        with open(name, 'wb') as f:
-            f.write(res.content)
-            f.close
-
-    # print(req.text)
+    def download(self, id, filename):
+        target = self.server.replace('xxx', id)
+        req = requests.get(url=target, stream=True,
+                           headers=self.headers,  verify=False)
+        with closing(req) as r:
+            with open('%d.jpg' % filename, 'ab+') as f:
+                for chunk in r.iter_content(chunk_size=4096):
+                    if chunk:
+                        f.write(chunk)
+                        f.flush()
 
 
 def main():
-    get_first()
+    gp = get_photos()
+    print('Photo connecting...')
+    for i in range(5):  # get 5 page
+        print('page ', i)
+        gp.get_ids()
+    for i in range(len(gp.ids)):
+        print('Downloading photo %d ...' % i)
+        gp.download(gp.ids[i], i)
 
 
 if __name__ == '__main__':
