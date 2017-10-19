@@ -24,7 +24,7 @@ def get_first():
     save(t)
 
 
-def main():
+def get_dir():
     server = "http://www.biqukan.com"
     target = "http://www.biqukan.com/1_1094/"
     req = requests.get(url=target)
@@ -36,6 +36,10 @@ def main():
     print(div[0])
     for each in a:
         print(each.string, server + each.get('href'))
+
+
+def main():
+    get_dir()
 
 
 if __name__ == '__main__':
