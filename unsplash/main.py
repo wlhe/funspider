@@ -9,21 +9,28 @@ from contextlib import closing
 
 class get_photos(object):
 
-    def __init__(self):
+    def __init__(self, num):
         self.server = 'https://unsplash.com/photos/xxx/download?force=trues'
         self.target = 'https://unsplash.com/napi/feeds/home'
         self.next_page = self.target
         self.headers = {
             'authorization': 'Client-ID c94869b36aa272dd62dfaeefed769d4115fb3189a9d1ec88ed457207747be626'}
         self.ids = []
+        self.num = num
 
     def get_ids(self):
-        req = requests.get(url=self.next_page,
-                           headers=self.headers, verify=False)
-        html = json.loads(req.text)
-        self.next_page = html['next_page']
-        for each in html['photos']:
-            self.ids.append(each['id'])
+        n = 0
+        while n < self.num:
+            req = requests.get(url=self.next_page,
+                               headers=self.headers, verify=False)
+            html = json.loads(req.text)
+            self.next_page = html['next_page']
+            for each in html['photos']:
+                self.ids.append(each['id'])
+                n = len(self.ids)
+                if n >= self.num:
+                    break
+        return n
 
     def download(self, id, filename):
         target = self.server.replace('xxx', id)
@@ -38,11 +45,11 @@ class get_photos(object):
 
 
 def main():
-    gp = get_photos()
+    total = 3
+    gp = get_photos(total)
     print('Photo connecting...')
-    for i in range(5):  # get 5 page
-        print('page ', i)
-        gp.get_ids()
+    n = gp.get_ids()
+    print('get %d photo' % n)
     for i in range(len(gp.ids)):
         print('Downloading photo %d ...' % i)
         gp.download(gp.ids[i], i)
